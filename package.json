@@ -1,0 +1,23 @@
+{
+  "name": "stepperposition",
+  "version": "1.0.0",
+  "description": "Control a stepper starting position in NodeJS. Raspberry Pi.",
+  "main": "stepper.js",
+  "dependencies": {
+    "stepper-wiringpi": "^0.0.2"
+  },
+  "devDependencies": {},
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+ssh://git@github.com/th3d0g/StepperPosition.git"
+  },
+  "author": "Nathan Broadbent",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/th3d0g/StepperPosition/issues"
+  },
+  "homepage": "https://github.com/th3d0g/StepperPosition#readme"
+}
