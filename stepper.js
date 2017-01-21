@@ -2,7 +2,7 @@ var StepperWiringPi = require("stepper-wiringpi");
 
 var Stepper = {
 	setup: setup,
-	moveToDeg: moveToDeg,
+	moveByDeg: moveByDeg,
 	motor: null,
 	gearRatio: null,
 	steps: null,
@@ -36,12 +36,12 @@ function setup( params ){
 }
 
 // Move Stepper Motor to Angle (degrees)
-function moveToDeg( degree, callback ){
+function moveByDeg( degree, callback ){
 	// Stop motor.
 	Stepper.motor.halt();
 
 	this.steps = degToStep( degree );
-	console.log("moveToDeg() - Begin stepping to " + degree + " degrees / " + this.steps + " steps." );
+	console.log("moveByDeg() - Begin stepping to " + degree + " degrees / " + this.steps + " steps." );
 
 	motorStepTo( this.steps, callback );
 }
@@ -49,33 +49,58 @@ function moveToDeg( degree, callback ){
 // Move Stepper Motor To X  Steps.
 function motorStepTo( steps, callback ){
 
+	// Take into account previous steps.
+	steps += Stepper.currentStep;
+
+	console.log( "Steps before clamp:" + steps );
+	steps = clampSteps( steps );
+	console.log( "Steps after clamp:" + steps );
+
 	// Recursive function, move to X steps 1 step at a time.
 	var stepFunc = function(){
 
 		// TODO: Add support for both directions.
 
+		// TODO: Issues with normalised step, vs actual step.
+
 		// Step by 1.
 		Stepper.motor.step( 1, function(){
+
 			Stepper.currentStep += 1;
 
 			// Check if completed.
-			if( Stepper.currentStep == steps ){
+			if( Stepper.currentStep >= steps ){
 
 				console.log( "stepToDeg() - Completed - " + stepToDeg( steps  ) + " degrees | Actual - " + stepToDeg( Stepper.currentStep ) + " degrees.");
 				// Finished callback.
-				callback( Stepper.currentStep );
+				callback( stepToDeg( Stepper.currentStep ) );
 			} else {
 				// Not completed, move another step.
 				stepFunc();
 			}
 
 			// Normalise
-			if( Stepper.currentStep >= Stepper.stepsPerRev ) Stepper.currentStep = 0; // Test for drift.
+			Stepper.currentStep = clampSteps( Stepper.currentStep );
+
+			//if( Stepper.currentStep >= Stepper.stepsPerRev ) Stepper.currentStep = 0; // Test for drift.
 		});
 	};
 
 	// Start moving...
 	stepFunc();
+}
+
+// Normalise Steps (Degree)
+function clampSteps( steps)
+{
+    return (steps % Stepper.stepsPerRev) + (steps < 0 ? Stepper.stepsPerRev : 0);
+}
+
+
+// Normalise Angle (Degree)
+function clampAngle( angle)
+{
+    return (angle % 360) + (angle < 0 ? 360 : 0);
 }
 
 // Convert Steps to Degree
