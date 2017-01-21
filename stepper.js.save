@@ -1,3 +1,4 @@
+// Motor properties.
 var gearRatio = 64;
 var steps = 32;
 
@@ -5,17 +6,22 @@ var StepperWiringPi = require("stepper-wiringpi");
 
 var motor = StepperWiringPi.setup( steps, 17, 18, 21, 22);
 
+// Speed
 motor.setSpeed(1200);
 
+// Useful Vars
 var stepsPerRev = ( steps * gearRatio );
 var stepPerDegree = stepsPerRev  / 360;
 
 var currentStep = 0;
 
-stepToDeg( 90, function( currentStep ){
+stepToDeg( 360
+
+, function( currentStep ){
 	console.log("Final callback!" + currentStep);
 });
 
+// Start stepping by X degrees.
 function stepToDeg( degree, callback ){
 	motor.halt();
 
@@ -27,6 +33,7 @@ function stepToDeg( degree, callback ){
 	motorStep( steps, callback );
 }
 
+// Recursive function 1 step at a time, keeps count of steps. Callback for finish.
 function motorStep( steps, callback ){
 
 	var stepFunc = function(){
@@ -40,8 +47,6 @@ function motorStep( steps, callback ){
 			} else {
 				stepFunc();
 			}
-
-			if( currentStep >= stepsPerRev ) currentStep = 0; // Test for drift.
 		});
 	};
 	stepFunc();

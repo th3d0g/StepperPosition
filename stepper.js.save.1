@@ -7,15 +7,38 @@ var motor = StepperWiringPi.setup( steps, 17, 18, 21, 22);
 
 motor.setSpeed(1200);
 
+//motor.forward();
+
 var stepsPerRev = ( steps * gearRatio );
 var stepPerDegree = stepsPerRev  / 360;
 
-var currentStep = 0;
+/*motor.step( 270 * stepPerDegree, function(){
 
-stepToDeg( 90, function( currentStep ){
+	console.log("hey");
+
+	console.log( motor._stepNumber );
+} );*/
+
+
+var steps = 360 * stepPerDegree;
+var currentStep = 0;
+var stepPerInterval = 1;
+
+stepToDeg( 360, function( currentStep ){
 	console.log("Final callback!" + currentStep);
 });
 
+urrentStep += stepPerInterval;
+
+	console.log( currentStep);
+
+	if( currentStep == steps ) clearInterval( interval );
+
+	if( currentStep > stepsPerRev ) currentStep = 0;
+}, 10, steps);*/
+
+
+// Test 2 - Callback,, count steps
 function stepToDeg( degree, callback ){
 	motor.halt();
 
@@ -40,8 +63,6 @@ function motorStep( steps, callback ){
 			} else {
 				stepFunc();
 			}
-
-			if( currentStep >= stepsPerRev ) currentStep = 0; // Test for drift.
 		});
 	};
 	stepFunc();
