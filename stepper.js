@@ -43,18 +43,16 @@ function moveByDeg( degree, callback ){
 	this.steps = degToStep( degree );
 	console.log("moveByDeg() - Begin stepping to " + degree + " degrees / " + this.steps + " steps." );
 
+	// Increment steps
+	this.steps += Stepper.currentStep;
+
+	console.log( "Steps to move:" + this.steps );
+
 	motorStepTo( this.steps, callback );
 }
 
 // Move Stepper Motor To X  Steps.
 function motorStepTo( steps, callback ){
-
-	// Take into account previous steps.
-	steps += Stepper.currentStep;
-
-	console.log( "Steps before clamp:" + steps );
-	steps = clampSteps( steps );
-	console.log( "Steps after clamp:" + steps );
 
 	// Recursive function, move to X steps 1 step at a time.
 	var stepFunc = function(){

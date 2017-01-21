@@ -8,30 +8,18 @@ stepper.setup({
 });
 
 
-// Test - Step 90 deg, then another 90 deg - final should be 180.
+// Test - Move in increments of 90 degrees.
+var c = 0;
+function moveBy90(){
+  stepper.moveByDeg( 90, function( degree ){
+    console.log( (++c) + ". Completed @ " + degree );
 
-stepper.moveByDeg( 90, function( degree ){
-  console.log("1. Completed @ " + degree );
+    setTimeout(function(){ 
 
+      moveBy90();
 
-  setTimeout(function(){ 
+    }, 2000);
 
-    stepper.moveByDeg( 90, function( degree ){
-
-        console.log("2. Completed @ " + degree );
-
-        setTimeout(function(){ 
-
-          stepper.moveByDeg( 90, function( degree ){
-
-              console.log("3. Completed @ " + degree );
-
-          });
-
-        }, 2000);
-
-    });
-
-  }, 2000);
-
-});
+  });
+}
+moveBy90();
