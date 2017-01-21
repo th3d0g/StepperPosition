@@ -1,45 +1,49 @@
-// Config
-var gearRatio = 64;
-var steps = 32;
-var rpm = 1200;
-var GPIOpins = [17, 18, 21, 22];
-
-// Init
 var StepperWiringPi = require("stepper-wiringpi");
 
-// Setup 
-var motor = StepperWiringPi.setup(
-	steps,
-	GPIOpins[0],
-	GPIOpins[1],
-	GPIOpins[2],
-	GPIOpins[3]
-);
-motor.setSpeed(rpm);
+var Stepper = {
+	setup: setup,
+	moveToDeg: moveToDeg,
+	motor: null,
+	gearRatio: null,
+	steps: null,
+	rpm: null,
+	GPIOpins: null
 
-// Useful variables
-var stepsPerRev = ( steps * gearRatio );
-var stepsPerDegree = stepsPerRev  / 360;
+};
+module.exports = Stepper;
 
-// TODO: Read current step from disk, to ensure motor starts at step 0.
+function setup( params ){
+	// Store params
+	Stepper.gearRatio = params.gearRatio;
+	Stepper.steps = params.steps;
+	Stepper.rpm = params.rpm;
+	Stepper.GPIOpins = params.GPIOpins;
 
-// Used to store current step.
-var currentStep = 0;
+	// Calc useful vars
+	Stepper.currentStep = 0;
+	Stepper.stepsPerRev = ( Stepper.steps * Stepper.gearRatio );
+	Stepper.stepsPerDegree = Stepper.stepsPerRev  / 360;
 
-// TEST - Move to angle ( degrees );
-moveToDeg( 90, function( degree ){
-	console.log("Move completed to degree " + degree );
-});
+	// Init Stepper Lib
+	Stepper.motor = StepperWiringPi.setup(
+		Stepper.steps,
+		Stepper.GPIOpins[0],
+		Stepper.GPIOpins[1],
+		Stepper.GPIOpins[2],
+		Stepper.GPIOpins[3]
+	);
+	Stepper.motor.setSpeed( Stepper.rpm );
+}
 
 // Move Stepper Motor to Angle (degrees)
 function moveToDeg( degree, callback ){
 	// Stop motor.
-	motor.halt();
+	Stepper.motor.halt();
 
-	var steps = degToStep( degree );
-	console.log("moveToDeg() - Begin stepping to " + degree + " degrees / " + steps + " steps." );
+	this.steps = degToStep( degree );
+	console.log("moveToDeg() - Begin stepping to " + degree + " degrees / " + this.steps + " steps." );
 
-	motorStepTo( steps, callback );
+	motorStepTo( this.steps, callback );
 }
 
 // Move Stepper Motor To X  Steps.
@@ -51,22 +55,22 @@ function motorStepTo( steps, callback ){
 		// TODO: Add support for both directions.
 
 		// Step by 1.
-		motor.step( 1, function(){
-			currentStep += 1;
+		Stepper.motor.step( 1, function(){
+			Stepper.currentStep += 1;
 
 			// Check if completed.
-			if( currentStep == steps ){
+			if( Stepper.currentStep == steps ){
 
-				console.log( "stepToDeg() - Completed - " + stepToDeg( steps  ) + " degrees | Actual - " + stepToDeg( currentStep ) + " degrees.");
+				console.log( "stepToDeg() - Completed - " + stepToDeg( steps  ) + " degrees | Actual - " + stepToDeg( Stepper.currentStep ) + " degrees.");
 				// Finished callback.
-				callback( currentStep );
+				callback( Stepper.currentStep );
 			} else {
 				// Not completed, move another step.
 				stepFunc();
 			}
 
 			// Normalise
-			if( currentStep >= stepsPerRev ) currentStep = 0; // Test for drift.
+			if( Stepper.currentStep >= Stepper.stepsPerRev ) Stepper.currentStep = 0; // Test for drift.
 		});
 	};
 
@@ -76,10 +80,10 @@ function motorStepTo( steps, callback ){
 
 // Convert Steps to Degree
 function stepToDeg( steps ){
-	return ( steps / stepsPerRev ) * 360;
+	return ( steps / Stepper.stepsPerRev ) * 360;
 }
 
 // Convert Degrees to Steps
 function degToStep( deg ){
-	return deg * stepsPerDegree;
+	return deg * Stepper.stepsPerDegree;
 }
