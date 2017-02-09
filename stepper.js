@@ -1,4 +1,7 @@
 var StepperWiringPi = require("stepper-wiringpi");
+// var Storage = require('node-storage');ls
+
+// var store = new Storage('stepper.data');
 
 var Stepper = {
 	setup: setup,
@@ -9,11 +12,11 @@ var Stepper = {
 	steps: null,
 	rpm: null,
 	GPIOpins: null
-
 };
 module.exports = Stepper;
 
 function setup( params ){
+
 	// Store params
 	Stepper.gearRatio = params.gearRatio;
 	Stepper.steps = params.steps;
@@ -22,6 +25,7 @@ function setup( params ){
 
 	// Calc useful vars
 	Stepper.currentStep = 0;
+	Stepper.currentAngle = 0;
 	Stepper.stepsPerRev = ( Stepper.steps * Stepper.gearRatio );
 	Stepper.stepsPerDegree = Stepper.stepsPerRev  / 360;
 
@@ -34,6 +38,13 @@ function setup( params ){
 		Stepper.GPIOpins[3]
 	);
 	Stepper.motor.setSpeed( Stepper.rpm );
+
+	// Move to start.
+	/*var currentStep = store.get('currentStep');
+	console.log("CurrentStep: " + currentStep);
+	if( currentStep ) Stepper.currentStep = currentStep;*/
+
+	
 }
 
 // TODO: Handling start position
@@ -47,23 +58,23 @@ function setup( params ){
 // 1. check position.
 // 2. move to 0.
 
-
 // Move To Angle = Move stepper to absolute angle, taking into account current position.
 function moveToAngle( degree, callback ){
+
 	// Stop motor.
 	Stepper.motor.halt();
 
 	this.steps = degToStep( degree );
 	console.log("moveToAngle() - Begin stepping to " + degree + " degrees / " + this.steps + " steps." );
 
-	console.log( "Steps to move:" + this.steps );
+	// console.log( "Steps to move:" + this.steps );
 
 	// Calc the quickest direction to rotate to new angle.
 	var currentAngle = stepToDeg( Stepper.currentStep );
 	var targetAngle = degree;
 	var direction = shortestDirection( currentAngle,  targetAngle );
 
-	console.log( currentAngle, targetAngle, direction );
+	console.log( "Curr: " + currentAngle, "Targ: " + targetAngle, "Dir: " + direction, "Curr Step:" + Stepper.currentStep );
 
 	motorStepTo( this.steps, callback, direction );
 }
@@ -95,7 +106,11 @@ function motorStepTo( steps, callback, direction ){
 		// Step by '1 step' at a time.
 		Stepper.motor.step( direction, function(){
 
-			Stepper.currentStep += 1;
+			Stepper.currentStep += direction;
+
+			Stepper.currentAngle = stepToDeg( Stepper.currentStep );
+
+			// store.put('currentStep', Stepper.currentStep);
 
 			// Check if completed.
 			if( Stepper.currentStep == steps ){
@@ -103,7 +118,7 @@ function motorStepTo( steps, callback, direction ){
 				//console.log( "stepToDeg() - Completed - " + stepToDeg( steps  ) + " degrees | Actual - " + stepToDeg( Stepper.currentStep ) + " degrees.");
 				
 				// Finished callback.
-				callback( stepToDeg( Stepper.currentStep ) );
+				callback( Stepper.currentAngle );
 			} else {
 				// Not completed, move another step.
 				stepFunc();
@@ -146,11 +161,21 @@ function degToStep( deg ){
 }
 
 // Will calc the quickest rotation to target angle (returns sign based on direction)
+// function shortestRotation( current, target ){
+// 	var a = target - current;
+// 	return (a + 180) % 360 - 180; 
+// }
 function shortestRotation( current, target ){
-	var a = target - current;
-	return (a + 180) % 360 - 180;
+	return ((((target - current) % 360) + 540) % 360) - 180;
 }
 
+// Return same as above, but 1 / -1
 function shortestDirection( current, target ){
+
+	// if 
+
+	if( ( current < 360 && current >= 180 ) && ( target >= 0 && target < 180 ) ){
+		return 1;
+	}
 	return shortestRotation( current,  target ) > 0 ? 1 : -1;
 }

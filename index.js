@@ -7,10 +7,39 @@ stepper.setup({
   GPIOpins: [17, 18, 21, 22]
 });
 
+
+var socket = require('socket.io-client')('http://192.168.1.101');
+socket.on('connect', function(){
+  console.log("Connected.");
+});
+// socket.on('event', function(data){});
+socket.on('disconnect', function(){
+  console.log("Disconnected.");
+});
+socket.on('gameobject', function (gameobject) {
+
+  // console.log("gameobject: " + name + " - RY: " + ry );
+
+  switch( gameobject.name ){
+    case "Main Camera Follow":
+
+
+      // TODO: Fix bug; 360/0 (e.g. start position) is relative to new position, which messes up direction system.
+
+      // TODO: Tweak rotation threshold in Unity. Perhaps need more elaborate system in order to be responsive but avoid jitter.
+
+      if( Math.abs( gameobject.ry - stepper.currentAngle) > 1 ){
+        console.log(gameobject.name, Math.round( gameobject.ry ));
+        stepper.moveToAngle( Math.round( gameobject.ry ), function( degree ){});
+      }
+    default:
+  }
+});
+
 // Tests
 
 // Moves to random degree relative to starting position.
-testMoveToRandom();
+// testMoveToRandom();
 
 // Will move increments of 90 (e.g. 90, 180... ) relative to starting position.
 // testMoveToAngle();
